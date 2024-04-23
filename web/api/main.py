@@ -1,11 +1,12 @@
 from flask import Flask, render_template
+import database.db as db
 
 app = Flask(__name__)
 
 
 @app.route("/api/getHeatData/")
 def getHeatData():
-    return [[48.7194, 44.5018], [48.7195, 44.5017]]
+    return db.EventInfo().select_events_latitude_longitude()
 
 
 @app.route("/map/")

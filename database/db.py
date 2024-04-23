@@ -1,5 +1,5 @@
 import pymysql
-from config_db import *
+from database.config_db import *
 
 
 class BaseSQL:
@@ -22,12 +22,18 @@ class EventInfo(BaseSQL):
     def __init__(self):
         super().__init__()
 
-    def insert_event_info(self, event_type, lattitude, longitude, card_id):
+    def insert_event_info(self, event_type, latitude, longitude, card_id, date, time):
         cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO events VALUES (NULL, %s, %s, %s, %s)", (event_type, lattitude, longitude, card_id))
+        cursor.execute("INSERT INTO events VALUES (NULL, %s, %s, %s, %s, %s, %s)",
+                       (event_type, latitude, longitude, card_id, date, time))
         self.connection.commit()
 
-    def select_events_lattitude_longitude(self):
+    def insert_event_info_list(self, event_list):
+        cursor = self.connection.cursor()
+        cursor.executemany("INSERT INTO events VALUES (NULL, %s, %s, %s, %s, %s, %s)", event_list)
+        self.connection.commit()
+
+    def select_events_latitude_longitude(self):
         cursor = self.connection.cursor()
         cursor.execute("SELECT latitude, longitude FROM events")
         data = cursor.fetchall()
