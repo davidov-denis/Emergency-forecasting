@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тепловая карта ЧП</title>
+    <script src="http://api-maps.yandex.ru/2.1/?apikey=20dfd6f4-545a-43cf-b1c8-96e82339316a&lang=ru_RU"
+            type="text/javascript"></script>
+    <!-- Change my.cdn.tld to your CDN host name -->
+    <script src="https://yastatic.net/s3/mapsapi-jslibs/heatmap/0.0.1/heatmap.min.js" type="text/javascript"></script>
+
+</head>
+<body>
+<div id="map" style="height: 400px"></div>
+
+<script defer>
+    ymaps.ready(init);
+
+    function getHeatData() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/getHeatData/', false);
+        xhr.send();
+        if (xhr.status != 200) {
+            alert(xhr.status + ': ' + xhr.statusText); // пример вывода: 404: Not Found
+        } else {
+            alert(xhr.responseText); // responseText -- текст ответа.
+            return JSON.parse(xhr.responseText)
+
+        }
+    }
+
+    var myMap;
+    var myHeatMap;
+
+    function init() {
+        // Создание карты.
+        myMap = new ymaps.Map("map", {
+            center: [48.7194, 44.5018],
+            zoom: 8
+        });
+
+        ymaps.modules.require(['Heatmap'], function (Heatmap) {
+            var data = getHeatData()
+            alert(data)
+            myHeatMap = new Heatmap(data, {
+                radius: 10
+            });
+            myHeatMap.setMap(myMap)
+        });
+    }
+</script>
+</body>
+</html>
