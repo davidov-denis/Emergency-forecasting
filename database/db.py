@@ -42,3 +42,10 @@ class EventInfo(BaseSQL):
             points.append([row['latitude'], row['longitude']])
         self.connection.close()
         return points
+
+    def select_events_counts(self):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT type, COUNT(DISTINCT id) AS qty FROM events GROUP BY type")
+        data = cursor.fetchall()
+        cursor.close()
+        return data
