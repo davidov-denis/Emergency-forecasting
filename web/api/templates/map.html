@@ -16,9 +16,9 @@
 <script defer>
     ymaps.ready(init);
 
-    function getHeatData() {
+    function getHeatData(start) {
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', '/api/getHeatData/', false);
+        xhr.open('GET', `/api/getHeatData/?start=${start}`, false);
         xhr.send();
         if (xhr.status != 200) {
             alert(xhr.status + ': ' + xhr.statusText); // пример вывода: 404: Not Found

@@ -14,4 +14,8 @@ def heat_map():
     return render_template("map.html")
 
 
+@app.route("/analytics/time-operators")
+def time_operators():
+    return render_template("")
+
 app.run(debug=True)
