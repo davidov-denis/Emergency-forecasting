@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<table class="table table-hover table-responsive sm">
+    <thead>
+    <tr>
+        <th scope="col">Интервал</th>
+        <th scope="col">Среднее количество вызовов</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for i in data %}
+    <tr>
+        <th scope="row">{{i["start"]}}:00:00-{{i["end"]}}:00:00</th>
+        <td>{{i["qty"]/955}}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{{graph_div_time|safe}}
+{% endblock %}

@@ -49,3 +49,14 @@ class EventInfo(BaseSQL):
         data = cursor.fetchall()
         cursor.close()
         return data
+
+    def select_by_time(self):
+        cursor = self.connection.cursor()
+        times = []
+        for i in range(0, 24):
+            cursor.execute(f"SELECT count(id) AS qty FROM events WHERE time > '{i}:00:00' AND time < '{i + 1}:00:00'")
+            data = cursor.fetchall()
+            data = data[0]['qty']
+            times.append({'start': i, 'end': i + 1, 'qty': data})
+        cursor.close()
+        return times
