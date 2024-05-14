@@ -6,9 +6,9 @@ import plotly.graph_objects as go
 app = Flask(__name__)
 
 
-@app.route("/api/getHeatData/")
-def getHeatData():
-    return db.EventInfo().select_events_latitude_longitude()
+@app.route("/api/getHeatData/<float:lat_1>/<float:lon_1>/<float:lat_2>/<float:lon_2>")
+def getHeatData(lat_1, lon_1, lat_2, lon_2):
+    return db.EventInfo().select_points(lat_1, lon_1, lat_2, lon_2)
 
 
 def create_graph(data):
@@ -16,7 +16,7 @@ def create_graph(data):
     y = []
     for i in data:
         x.append(str(i['start']) + ":00:00" + '-' + str(i['end']) + ":00:00")
-        y.append(i['qty'] / 955)  # среднее количество вызовов в данный промежуток времени в день 955 дней
+        y.append(i['qty'] / 955)  # среднее количество вызовов в данный промежуток времени в день (955 дней)
     fig = go.Figure(
         data=[go.Bar(y=y, x=x)],
     )

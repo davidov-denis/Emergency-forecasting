@@ -60,3 +60,13 @@ class EventInfo(BaseSQL):
             times.append({'start': i, 'end': i + 1, 'qty': data})
         cursor.close()
         return times
+
+    def select_points(self, lat_1, lon_1, lat_2, lon_2):
+        cursor = self.connection.cursor()
+        cursor.execute(f"SELECT * FROM events WHERE {lat_1} > latitude and latitude < {lat_2} and {lon_1} > longitude and longitude < {lon_2} and latitude != 0 and longitude != 0")
+        data = cursor.fetchall()
+        points = []
+        for row in data:
+            points.append([row['latitude'], row['longitude']])
+        self.connection.close()
+        return points
