@@ -67,8 +67,7 @@ class EventInfo(BaseSQL):
             MONTH(date) AS month,
             COUNT(*) AS qty
             FROM events
-            GROUP BY MONTH(date)
-            ORDER BY date;""")
+            GROUP BY MONTH(date);""")
         times = cursor.fetchall()
         cursor.close()
         return times
