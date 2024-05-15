@@ -4,13 +4,13 @@
     <thead>
     <tr>
         <th scope="col">Интервал</th>
-        <th scope="col">Среднее количество вызовов</th>
+        <th scope="col">Среднее количество вызовов в день в промежуток времени</th>
     </tr>
     </thead>
     <tbody>
     {% for i in data %}
     <tr>
-        <th scope="row">{{i["start"]}}:00:00-{{i["end"]}}:00:00</th>
+        <th scope="row">{{i["hour"]}}:00:00-{{i["hour"]+1}}:00:00</th>
         <td>{{i["qty"]/955}}</td>
     </tr>
     {% endfor %}

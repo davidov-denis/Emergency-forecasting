@@ -1,53 +1,217 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends 'base.html' %}
+{% block head %}
     <title>Тепловая карта ЧП</title>
     <script src="http://api-maps.yandex.ru/2.1/?apikey=20dfd6f4-545a-43cf-b1c8-96e82339316a&lang=ru_RU"
             type="text/javascript"></script>
     <!-- Change my.cdn.tld to your CDN host name -->
     <script src="https://yastatic.net/s3/mapsapi-jslibs/heatmap/0.0.1/heatmap.min.js" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    <style>
+        *,
+        *::after,
+        *::before {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-</head>
-<body>
-<div id="map" style="height:100vh"></div>
+        .event-types {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+            position: relative;
+        }
+        .event-type {
+            padding: 8px;
+            border: 1px solid black;
+        }
+        .button {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+
+    <details id="filter-details" class="btn btn-lg btn-light">
+        <summary>
+            Типы событий
+        </summary>
+        <button id="select-all-event-types-button">
+            Выбрать все события
+        </button>
+        <button id="deselect-all-event-types-button">
+            Убрать все события
+        </button>
+        <div id="event-types" class="event-types">
+        </div>
+        <button id="filter-event-types-button" class="button">
+            Отфильтровать
+        </button>
+    </details>
+
+<div id="map" style="height:80vh;"></div>
 
 <script defer>
+    const BASE_API_URL = 'http://127.0.0.1:5000/api'
+
     ymaps.ready(init);
 
-    function getHeatData(start) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', `/api/getHeatData/?start=${start}`, false);
-        xhr.send();
-        if (xhr.status != 200) {
-            alert(xhr.status + ': ' + xhr.statusText); // пример вывода: 404: Not Found
-        } else {
-            alert(xhr.responseText); // responseText -- текст ответа.
-            return JSON.parse(xhr.responseText)
+    function getYMapBounds() {
+        const bounds = myMap.getBounds()
 
+        const bottomLeftBound = bounds[0]
+        const topRightBound = bounds[1]
+
+        return {
+            bottomLeftBound: {
+                latitude: bottomLeftBound[0],
+                longitude: bottomLeftBound[1],
+            },
+            topRightBound:{
+                latitude: topRightBound[0],
+                longitude: topRightBound[1],
+            },
         }
     }
+
+    async function fetchData({ bottomLeftBound, topRightBound }, types) {
+        const { latitude: lat1, longitude: lon1 } = bottomLeftBound
+        const { latitude: lat2, longitude: lon2 } = topRightBound
+
+        const dataApiUrl = types === undefined
+            ? `${BASE_API_URL}/getHeatData/${lat1}/${lon1}/${lat2}/${lon2}`
+            : `${BASE_API_URL}/getHeatDataByType/${lat1}/${lon1}/${lat2}/${lon2}?types=${types}`
+
+        return fetch(dataApiUrl).then((r) => r.json())
+    }
+
+    async function updateHeatmapData() {
+        const checkedTypes = getCheckedTypes()
+
+        console.log('fetching data...');
+        const data = await fetchData(getYMapBounds(), checkedTypes)
+        if (data.length > 300000){
+            alert("Слишком много значений! Уменьшьте масштаб")
+            return
+        }
+        console.log('data fetched!');
+
+        console.log(data);
+
+        myHeatMap.setData(data)
+    }
+
+    async function fetchTypes() {
+        const body = await (await fetch(`${BASE_API_URL}/getTypes`)).json()
+
+        return body.flat()
+    }
+
+    async function generateTypesCheckboxes() {
+        const typesWrapper = document.querySelector("#event-types")
+
+        const types = await fetchTypes()
+
+        const typesCheckboxes = types.map((type, index) => {
+            const id = `event-type-${index}`
+
+            const wrapper = document.createElement("div")
+
+            const label = document.createElement('label')
+            const checkbox = document.createElement("input")
+
+            wrapper.classList.add('event-type')
+
+            label.textContent = type
+            label.htmlFor = id
+
+            checkbox.type = 'checkbox'
+            checkbox.id = id
+            checkbox.value = type
+
+            wrapper.append(checkbox, label)
+
+            return wrapper
+        })
+
+        typesWrapper.append(...typesCheckboxes)
+    }
+
+    function getCheckedTypes() {
+        const typesWrapper = document.querySelector("#event-types")
+        const checkedTypeElements = [...typesWrapper.querySelectorAll("input:checked[value]")]
+
+        return checkedTypeElements
+            .map((typeElement) => typeElement.value)
+            .join(";")
+    }
+
+    const debouncedUpdateHeatmapData = _.debounce(updateHeatmapData, 1500)
 
     var myMap;
     var myHeatMap;
 
     function init() {
+        generateTypesCheckboxes()
+
+        const filterButton = document.querySelector("#filter-event-types-button")
+
+        filterButton.addEventListener('click', async (event) => {
+            event.preventDefault()
+
+            debouncedUpdateHeatmapData()
+            document.querySelector("#filter-details").removeAttribute('open')
+        })
+
+        const selectAllButton = document.querySelector('#select-all-event-types-button')
+        selectAllButton.addEventListener('click', (event) => {
+            event.preventDefault()
+
+            document
+                .querySelector("#event-types")
+                .querySelectorAll("input[value]")
+                .forEach((element) => {
+                    element.checked = true
+                })
+        })
+
+        const deselectAllButton = document.querySelector('#deselect-all-event-types-button')
+        deselectAllButton.addEventListener('click', (event) => {
+            event.preventDefault()
+
+            document
+                .querySelector("#event-types")
+                .querySelectorAll("input[value]")
+                .forEach((element) => {
+                    element.checked = false
+                })
+        })
         // Создание карты.
         myMap = new ymaps.Map("map", {
             center: [48.7194, 44.5018],
-            zoom: 8
+            zoom: 16,
+        }, {
+            maxZoom: 17,
+            minZoom: 10,
+
         });
 
-        ymaps.modules.require(['Heatmap'], function (Heatmap) {
-            var data = getHeatData()
-            alert(data)
-            myHeatMap = new Heatmap(data, {
-                radius: 10
-            });
+        myMap.events.add('boundschange', (event) => {
+            debouncedUpdateHeatmapData()
+        })
+
+        ymaps.modules.require(['Heatmap'], async function (Heatmap) {
+            myHeatMap = new Heatmap([], {
+                radius: 10,
+                dissipating: true,
+            })
+
             myHeatMap.setMap(myMap)
+
+            updateHeatmapData()
         });
     }
 </script>
-</body>
-</html>
+{% endblock %}

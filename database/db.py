@@ -35,13 +35,12 @@ class EventInfo(BaseSQL):
 
     def select_events_latitude_longitude(self):
         cursor = self.connection.cursor()
-        cursor.execute("SELECT latitude, longitude FROM events")
+        cursor.execute(
+            "SELECT latitude, longitude FROM events WHERE type not in ('Вызов с молчанием', 'Случайный набор номера', 'Прерывание вызова звонящим сразу после подключения', 'Получение справок', 'Автоматические ложные вызовы', 'Детские шалости', 'не задано','Неправильный набор номера (ошибочный)', 'Ложные вызовы вследствие сбоя в сети связи', 'Тренировка','Тест Соседний субъект')")
         data = cursor.fetchall()
-        points = []
-        for row in data:
-            points.append([row['latitude'], row['longitude']])
+        print(data)
         self.connection.close()
-        return points
+        return data
 
     def select_events_counts(self):
         cursor = self.connection.cursor()
@@ -52,21 +51,57 @@ class EventInfo(BaseSQL):
 
     def select_by_time(self):
         cursor = self.connection.cursor()
-        times = []
-        for i in range(0, 24):
-            cursor.execute(f"SELECT count(id) AS qty FROM events WHERE time > '{i}:00:00' AND time < '{i + 1}:00:00'")
-            data = cursor.fetchall()
-            data = data[0]['qty']
-            times.append({'start': i, 'end': i + 1, 'qty': data})
+        cursor.execute("""SELECT
+            HOUR(time) AS hour,
+            COUNT(*) AS qty
+            FROM events
+            GROUP BY HOUR(time)
+            ORDER BY hour;""")
+        times = cursor.fetchall()
+        cursor.close()
+        return times
+
+    def select_by_month(self):
+        cursor = self.connection.cursor()
+        cursor.execute("""SELECT
+            MONTH(date) AS month,
+            COUNT(*) AS qty
+            FROM events
+            GROUP BY MONTH(date)
+            ORDER BY date;""")
+        times = cursor.fetchall()
         cursor.close()
         return times
 
     def select_points(self, lat_1, lon_1, lat_2, lon_2):
-        cursor = self.connection.cursor()
-        cursor.execute(f"SELECT * FROM events WHERE {lat_1} > latitude and latitude < {lat_2} and {lon_1} > longitude and longitude < {lon_2} and latitude != 0 and longitude != 0")
+        cursor = self.connection.cursor(pymysql.cursors.SSCursor)
+
+        cursor.execute(
+            f"""SELECT latitude, longitude
+                FROM events
+                WHERE (latitude BETWEEN {lat_1} AND {lat_2})
+                AND (longitude BETWEEN {lon_1} AND {lon_2})
+                AND (type NOT IN ('Вызов с молчанием', 'Случайный набор номера', 'Прерывание вызова звонящим сразу после подключения', 'Получение справок', 'Автоматические ложные вызовы', 'Детские шалости', 'не задано', 'Неправильный набор номера (ошибочный)', 'Ложные вызовы вследствие сбоя в сети связи', 'Тренировка', 'Тест Соседний субъект'))""")
         data = cursor.fetchall()
-        points = []
-        for row in data:
-            points.append([row['latitude'], row['longitude']])
         self.connection.close()
-        return points
+        return data
+
+    def select_points_by_types(self, lat_1, lon_1, lat_2, lon_2, point_type):
+        cursor = self.connection.cursor(pymysql.cursors.SSCursor)
+        cursor.execute(
+            f"""SELECT latitude, longitude
+                FROM events
+                WHERE (latitude BETWEEN {lat_1} AND {lat_2})
+                AND (longitude BETWEEN {lon_1} AND {lon_2})
+                AND (type IN ({"'" + "', '".join(point_type) + "'"}))""")
+        data = cursor.fetchall()
+        self.connection.close()
+        return data
+
+    def select_types(self):
+        cursor = self.connection.cursor(pymysql.cursors.SSCursor)
+        cursor.execute(
+            f"""SELECT type FROM events WHERE type NOT IN ('Вызов с молчанием', 'Случайный набор номера', 'Прерывание вызова звонящим сразу после подключения', 'Получение справок', 'Автоматические ложные вызовы', 'Детские шалости', 'не задано', 'Неправильный набор номера (ошибочный)', 'Ложные вызовы вследствие сбоя в сети связи', 'Тренировка', 'Тест Соседний субъект') GROUP BY type""")
+        data = cursor.fetchall()
+        self.connection.close()
+        return data
