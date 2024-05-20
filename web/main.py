@@ -52,7 +52,6 @@ def analytic_dates():
     data = db.EventInfo().select_by_month()
     for i in range(0, len(months)):
         data[i]['month'] = months[i]
-    print(data)
     x, y = [], []
     for i in data:
         x.append(i["month"])
@@ -60,6 +59,15 @@ def analytic_dates():
     graph_div_time = create_graph(x, y)
     return render_template("analitic_month.html", data=data, graph_div_time=graph_div_time)
 
+@app.route("/analysis/type")
+def analytic_types():
+    data = db.EventInfo().select_types_qty()
+    x, y = [], []
+    for i in data:
+        x.append(i["type"])
+        y.append(i['qty'])
+    graph_div_time = create_graph(x, y)
+    return render_template("types.html", graph_div_time=graph_div_time, data=data)
 
 @app.route("/map/")
 def heat_map():

@@ -104,3 +104,10 @@ class EventInfo(BaseSQL):
         data = cursor.fetchall()
         self.connection.close()
         return data
+
+    def select_types_qty(self):
+        cursor = self.connection.cursor()
+        cursor.execute("""SELECT type, count(id) as qty FROM events GROUP BY type""")
+        data = cursor.fetchall()
+        self.connection.close()
+        return data
