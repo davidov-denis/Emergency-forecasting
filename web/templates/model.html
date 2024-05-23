@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+    <form class="form" method="POST">
+        <input type="text" name="lat" class="form-control" placeholder="latitude">
+        <input type="text" name="lon" class="form-control" placeholder="longitude">
+        <button type="submit" class="btn btn-success">Запрос
+        </button>
+    </form>
+    {% if data %}
+
+        <p>Результат {{ data['lat'] }},{{ data['lon'] }} - тип {{ data['type'] }}</p>
+    {% endif %}
+{% endblock %}

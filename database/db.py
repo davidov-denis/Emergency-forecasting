@@ -111,3 +111,10 @@ class EventInfo(BaseSQL):
         data = cursor.fetchall()
         self.connection.close()
         return data
+
+    def select_points_types(self):
+        cursor = self.connection.cursor()
+        cursor.execute("""SELECT latitude, longitude, type FROM events WHERE (type NOT IN ('Вызов с молчанием', 'Случайный набор номера', 'Прерывание вызова звонящим сразу после подключения', 'Получение справок', 'Автоматические ложные вызовы', 'Детские шалости', 'не задано', 'Неправильный набор номера (ошибочный)', 'Ложные вызовы вследствие сбоя в сети связи', 'Тренировка', 'Тест Соседний субъект') AND latitude>0 AND longitude>0 AND type NOT like '%Covid%')ORDER BY latitude""")
+        data = cursor.fetchall()
+        self.connection.close()
+        return data

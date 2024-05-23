@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
 {% block content %}
-<table class="table table-hover table-responsive sm">
-    <thead>
-    <tr>
-        <th scope="col">Тип вызова</th>
-        <th scope="col">Среднее количество вызовов в день в промежуток времени</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for i in data %}
-    <tr>
-        <th scope="row">{{ i["type"] }}</th>
-        <td>{{i["qty"]/955}}</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
+    <table class="table table-hover table-responsive sm">
+        <thead>
+        <tr>
+            <th scope="col">Тип вызова</th>
+            <th scope="col">Среднее количество вызовов в день в промежуток времени</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for i in data %}
+            <tr>
+                <th scope="row">{{ i["type"] }}</th>
+                <td>{{ i["qty"]/955 }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
     <div id="graph" style="min-height: 50vh">
-        {{graph_div_time|safe}}
+        {{ graph_div_time|safe }}
     </div>
 {% endblock %}
